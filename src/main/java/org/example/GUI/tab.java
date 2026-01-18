@@ -1,4 +1,4 @@
-package org.example;
+package org.example.GUI;
 
 import org.example.DAO.ProductDAO;
 import org.example.Model.ProductModel;
@@ -7,7 +7,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
-public class Main extends JFrame {
+public class tab extends JFrame {
 
     private ProductDAO productDAO;
     private DefaultTableModel productTableModel;
@@ -18,7 +18,7 @@ public class Main extends JFrame {
     private JTextField stockField;
     private int selectedProductId = -1;
 
-    public Main() {
+    public tab() {
         productDAO = new ProductDAO();
 
         setTitle("Inventory Invoice Management System");
@@ -395,6 +395,6 @@ public class Main extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Main());
+        SwingUtilities.invokeLater(() -> new tab());
     }
 }

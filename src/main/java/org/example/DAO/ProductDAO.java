@@ -1,41 +1,47 @@
 package org.example.DAO;
 
+import org.example.Model.ProductModel;
+import org.example.util.db;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import org.example.util.db;
-import org.example.Model.ProductModel;
-import java.sql.*;
 
 public class ProductDAO {
+
     public int createProduct(ProductModel product) throws Exception {
-        String sql = "INSERT INTO product (id, sku, name, price, stock) " +
-                "VALUES (?, ?, ?, ?, ?)";
+        String sql = """
+                INSERT INTO Products (sku, name, price, stock)
+                VALUES (?, ?, ?, ?)
+                """;
 
         try (Connection connection = db.getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement statement = connection.prepareStatement(
+                     sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            statement.setInt(1, product.id());
-            statement.setString(2, product.sku());
-            statement.setString(3, product.name());
-            statement.setDouble(4, product.price());
-            statement.setInt(5, product.stock());
+            statement.setString(1, product.sku());
+            statement.setString(2, product.name());
+            statement.setDouble(3, product.price());
+            statement.setInt(4, product.stock());
 
-            int rowsAffected = statement.executeUpdate();
+            statement.executeUpdate();
 
-            if (rowsAffected > 0) {
-                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        return generatedKeys.getInt(1);
-                    }
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    return keys.getInt(1);
                 }
             }
 
-            throw new SQLException("Creating product failed, no ID obtained.");
+            throw new SQLException("Failed to create product, no ID returned.");
         }
     }
+
     public boolean updateProduct(ProductModel product) throws Exception {
-        String sql = "UPDATE product SET sku = ?, name = ?, price = ?, stock = ? " +
-                "WHERE id = ?";
+        String sql = """
+                UPDATE Products
+                SET sku = ?, name = ?, price = ?, stock = ?
+                WHERE id = ?
+                """;
 
         try (Connection connection = db.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -46,45 +52,65 @@ public class ProductDAO {
             statement.setInt(4, product.stock());
             statement.setInt(5, product.id());
 
-            int rowsAffected = statement.executeUpdate();
-
-            return rowsAffected > 0;
+            return statement.executeUpdate() > 0;
         }
     }
+
     public boolean deleteProduct(int productId) throws Exception {
-        String sql = "DELETE FROM product WHERE id = ?";
+        String sql = "DELETE FROM Products WHERE id = ?";
 
         try (Connection connection = db.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setInt(1, productId);
-
-            int rowsAffected = statement.executeUpdate();
-
-            return rowsAffected > 0;
+            return statement.executeUpdate() > 0;
         }
     }
 
     public List<ProductModel> getAllProducts() throws Exception {
-        String sql = "SELECT id, sku, name, price, stock FROM product ORDER BY id";
+        String sql = """
+                SELECT id, sku, name, price, stock
+                FROM Products
+                ORDER BY id
+                """;
+
         List<ProductModel> products = new ArrayList<>();
 
         try (Connection connection = db.getConnection();
              PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
+             ResultSet rs = statement.executeQuery()) {
 
-            while (resultSet.next()) {
-                ProductModel product = new ProductModel(
-                        resultSet.getInt("id"),
-                        resultSet.getString("sku"),
-                        resultSet.getString("name"),
-                        resultSet.getDouble("price"),
-                        resultSet.getInt("stock")
-                );
-                products.add(product);
+            while (rs.next()) {
+                products.add(new ProductModel(
+                        rs.getInt("id"),
+                        rs.getString("sku"),
+                        rs.getString("name"),
+                        rs.getDouble("price"),
+                        rs.getInt("stock")
+                ));
             }
         }
 
         return products;
+    }
+
+    public void deductStock(int productId, int quantity) throws Exception {
+        String sql = """
+                UPDATE Products
+                SET stock = stock - ?
+                WHERE id = ? AND stock >= ?
+                """;
+
+        try (Connection connection = db.getConnection();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, quantity);
+            statement.setInt(2, productId);
+            statement.setInt(3, quantity);
+
+            if (statement.executeUpdate() == 0) {
+                throw new SQLException("Insufficient stock or product not found.");
+            }
+        }
     }
 }
