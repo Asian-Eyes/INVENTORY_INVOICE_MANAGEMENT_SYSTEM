@@ -12,6 +12,7 @@ public class Products extends JPanel {
     private ProductDAO productDAO;
     private DefaultTableModel productTableModel;
     private JTable productTable;
+    private JTextField idField;
     private JTextField skuField;
     private JTextField nameField;
     private JTextField priceField;
@@ -38,29 +39,41 @@ public class Products extends JPanel {
         gbc.gridwidth = 2;
         add(titleLabel, gbc);
 
-        gbc.gridwidth = 1;
+        // ID Field
+        gbc.gridx = 0;
         gbc.gridy = 1;
+        add(new JLabel("ID:"), gbc);
+        gbc.gridx = 1;
+        idField = new JTextField(20);
+        add(idField, gbc);
+
+        // SKU Field
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         add(new JLabel("SKU:"), gbc);
         gbc.gridx = 1;
         skuField = new JTextField(20);
         add(skuField, gbc);
 
+        // Product Name Field
         gbc.gridx = 0;
-        gbc.gridy = 2;
+        gbc.gridy = 3;
         add(new JLabel("Product Name:"), gbc);
         gbc.gridx = 1;
         nameField = new JTextField(20);
         add(nameField, gbc);
 
+        // Price Field
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 4;
         add(new JLabel("Price:"), gbc);
         gbc.gridx = 1;
         priceField = new JTextField(20);
         add(priceField, gbc);
 
+        // Stock Field
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 5;
         add(new JLabel("Stock:"), gbc);
         gbc.gridx = 1;
         stockField = new JTextField(20);
@@ -85,7 +98,7 @@ public class Products extends JPanel {
         buttonPanel.add(clearButton);
 
         gbc.gridx = 0;
-        gbc.gridy = 5;
+        gbc.gridy = 6;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
         add(buttonPanel, gbc);
@@ -104,7 +117,7 @@ public class Products extends JPanel {
         JScrollPane tableScrollPane = new JScrollPane(productTable);
         tableScrollPane.setPreferredSize(new Dimension(700, 200));
 
-        gbc.gridy = 6;
+        gbc.gridy = 7;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
@@ -122,6 +135,7 @@ public class Products extends JPanel {
                 int selectedRow = productTable.getSelectedRow();
                 if (selectedRow >= 0) {
                     selectedProductId = (int) productTableModel.getValueAt(selectedRow, 0);
+                    idField.setText(String.valueOf(selectedProductId));
                     skuField.setText(productTableModel.getValueAt(selectedRow, 1).toString());
                     nameField.setText(productTableModel.getValueAt(selectedRow, 2).toString());
                     priceField.setText(productTableModel.getValueAt(selectedRow, 3).toString());
@@ -135,20 +149,22 @@ public class Products extends JPanel {
 
     private void addProduct() {
         try {
+            String idText = idField.getText().trim();
             String sku = skuField.getText().trim();
             String name = nameField.getText().trim();
             String priceText = priceField.getText().trim();
             String stockText = stockField.getText().trim();
 
-            if (sku.isEmpty() || name.isEmpty() || priceText.isEmpty() || stockText.isEmpty()) {
+            if (idText.isEmpty() || sku.isEmpty() || name.isEmpty() || priceText.isEmpty() || stockText.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields!");
                 return;
             }
 
+            int id = Integer.parseInt(idText);
             double price = Double.parseDouble(priceText);
             int stock = Integer.parseInt(stockText);
 
-            ProductModel product = new ProductModel(0, sku, name, price, stock);
+            ProductModel product = new ProductModel(id, sku, name, price, stock);
             productDAO.createProduct(product);
 
             JOptionPane.showMessageDialog(this, "Product added successfully!");
@@ -169,20 +185,22 @@ public class Products extends JPanel {
                 return;
             }
 
+            String idText = idField.getText().trim();
             String sku = skuField.getText().trim();
             String name = nameField.getText().trim();
             String priceText = priceField.getText().trim();
             String stockText = stockField.getText().trim();
 
-            if (sku.isEmpty() || name.isEmpty() || priceText.isEmpty() || stockText.isEmpty()) {
+            if (idText.isEmpty() || sku.isEmpty() || name.isEmpty() || priceText.isEmpty() || stockText.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Please fill in all fields!");
                 return;
             }
 
+            int id = Integer.parseInt(idText);
             double price = Double.parseDouble(priceText);
             int stock = Integer.parseInt(stockText);
 
-            ProductModel product = new ProductModel(selectedProductId, sku, name, price, stock);
+            ProductModel product = new ProductModel(id, sku, name, price, stock);
             productDAO.updateProduct(product);
 
             JOptionPane.showMessageDialog(this, "Product updated successfully!");
@@ -234,6 +252,7 @@ public class Products extends JPanel {
     }
 
     private void clearFields() {
+        idField.setText("");
         skuField.setText("");
         nameField.setText("");
         priceField.setText("");
