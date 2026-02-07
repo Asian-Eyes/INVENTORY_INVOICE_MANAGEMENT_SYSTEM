@@ -1,0 +1,6 @@
+db:
+  host: localhost
+  port: 3308
+  name: inventory_invoice_db
+  user: root
+  password: 'ZZ@"4._V(q9z^j&j'

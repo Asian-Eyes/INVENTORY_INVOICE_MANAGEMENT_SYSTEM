@@ -1,15 +1,15 @@
-package org.example.GUI;
+package org.example.GUI.panels;
 
-import org.example.DAO.ProductDAO;
 import org.example.Model.ProductModel;
+import org.example.Service.ProductService;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
-public class Products extends JPanel {
+public class ProductsPanel extends JPanel {
 
-    private ProductDAO productDAO;
+    private ProductService productService;
     private DefaultTableModel productTableModel;
     private JTable productTable;
     private JTextField idField;
@@ -19,8 +19,8 @@ public class Products extends JPanel {
     private JTextField stockField;
     private int selectedProductId = -1;
 
-    public Products() {
-        productDAO = new ProductDAO();
+    public ProductsPanel() {
+        productService = new ProductService();
         initializePanel();
     }
 
@@ -103,7 +103,7 @@ public class Products extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         add(buttonPanel, gbc);
 
-        String[] columnNames = {"ID", "SKU", "Product Name", "Price", "Stock"};
+        String[] columnNames = { "ID", "SKU", "Product Name", "Price", "Stock" };
         productTableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -165,7 +165,7 @@ public class Products extends JPanel {
             int stock = Integer.parseInt(stockText);
 
             ProductModel product = new ProductModel(id, sku, name, price, stock);
-            productDAO.createProduct(product);
+            productService.createProduct(product);
 
             JOptionPane.showMessageDialog(this, "Product added successfully!");
             loadProducts();
@@ -201,7 +201,7 @@ public class Products extends JPanel {
             int stock = Integer.parseInt(stockText);
 
             ProductModel product = new ProductModel(id, sku, name, price, stock);
-            productDAO.updateProduct(product);
+            productService.updateProduct(product);
 
             JOptionPane.showMessageDialog(this, "Product updated successfully!");
             loadProducts();
@@ -220,7 +220,7 @@ public class Products extends JPanel {
             int confirm = JOptionPane.showConfirmDialog(this, "Delete this product?");
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
-                    productDAO.deleteProduct(selectedProductId);
+                    productService.deleteProduct(selectedProductId);
                     JOptionPane.showMessageDialog(this, "Product deleted successfully!");
                     loadProducts();
                     clearFields();
@@ -236,14 +236,14 @@ public class Products extends JPanel {
     private void loadProducts() {
         productTableModel.setRowCount(0);
         try {
-            var products = productDAO.getAllProducts();
+            var products = productService.getAllProducts();
             for (ProductModel product : products) {
-                productTableModel.addRow(new Object[]{
-                        product.id(),
-                        product.sku(),
-                        product.name(),
-                        product.price(),
-                        product.stock()
+                productTableModel.addRow(new Object[] {
+                        product.getId(),
+                        product.getSku(),
+                        product.getName(),
+                        product.getPrice(),
+                        product.getStock()
                 });
             }
         } catch (Exception e) {
