@@ -1,11 +1,10 @@
-package org.example.GUI;
+package org.example.GUI.panels;
 
-import org.example.DAO.ProductDAO;
-import org.example.DAO.InvoicesDAO;
-import org.example.DAO.InvoiceItemDAO;
 import org.example.Model.ProductModel;
-import org.example.Model.InvoicesModel;
-import org.example.Model.InvoiceItemsModel;
+import org.example.Model.InvoiceModel;
+import org.example.Model.InvoiceItemModel;
+import org.example.Service.ProductService;
+import org.example.Service.InvoiceService;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -15,7 +14,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InvoiceCartGUI extends JPanel {
+public class InvoiceCartPanel extends JPanel {
     private JComboBox<ProductModel> productComboBox;
     private JSpinner quantitySpinner;
     private JButton addToCartButton;
@@ -28,15 +27,13 @@ public class InvoiceCartGUI extends JPanel {
     private JTextField invoiceNoField;
 
     private List<CartItem> cartItems;
-    private ProductDAO productDAO;
-    private InvoicesDAO invoicesDAO;
-    private InvoiceItemDAO itemDAO;
+    private ProductService productService;
+    private InvoiceService invoiceService;
 
-    public InvoiceCartGUI() {
+    public InvoiceCartPanel() {
         cartItems = new ArrayList<>();
-        productDAO = new ProductDAO();
-        invoicesDAO = new InvoicesDAO();
-        itemDAO = new InvoiceItemDAO();
+        productService = new ProductService();
+        invoiceService = new InvoiceService();
 
         setLayout(new BorderLayout(10, 10));
         setBackground(Color.WHITE);
@@ -59,11 +56,11 @@ public class InvoiceCartGUI extends JPanel {
         productComboBox.setRenderer(new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
-                                                          int index, boolean isSelected, boolean cellHasFocus) {
+                    int index, boolean isSelected, boolean cellHasFocus) {
                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
                 if (value instanceof ProductModel) {
                     ProductModel product = (ProductModel) value;
-                    setText(product.name() + " - $" + String.format("%.2f", product.price()));
+                    setText(product.getName() + " - $" + String.format("%.2f", product.getPrice()));
                 }
                 return this;
             }
@@ -79,7 +76,7 @@ public class InvoiceCartGUI extends JPanel {
         addToCartButton.setPreferredSize(new Dimension(120, 30));
         addToCartButton.addActionListener(e -> addToCart());
 
-        String[] columnNames = {"Product", "SKU", "Price", "Quantity", "Total"};
+        String[] columnNames = { "Product", "SKU", "Price", "Quantity", "Total" };
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -131,10 +128,8 @@ public class InvoiceCartGUI extends JPanel {
                         BorderFactory.createLineBorder(new Color(200, 200, 200)),
                         "Create Invoice",
                         0, 0,
-                        new Font("Arial", Font.BOLD, 18)
-                ),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+                        new Font("Arial", Font.BOLD, 18)),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
         JPanel invoicePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
         invoicePanel.setBackground(Color.WHITE);
@@ -163,10 +158,8 @@ public class InvoiceCartGUI extends JPanel {
                         BorderFactory.createLineBorder(new Color(200, 200, 200)),
                         "Invoice Items",
                         0, 0,
-                        new Font("Arial", Font.BOLD, 16)
-                ),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+                        new Font("Arial", Font.BOLD, 16)),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
         JScrollPane scrollPane = new JScrollPane(cartTable);
         scrollPane.setPreferredSize(new Dimension(650, 250));
@@ -213,7 +206,7 @@ public class InvoiceCartGUI extends JPanel {
 
     private void loadProducts() {
         try {
-            var products = productDAO.getAllProducts();
+            var products = productService.getAllProducts();
             productComboBox.removeAllItems();
             for (ProductModel product : products) {
                 productComboBox.addItem(product);
@@ -238,9 +231,9 @@ public class InvoiceCartGUI extends JPanel {
             return;
         }
 
-        if (quantity > selectedProduct.stock()) {
+        if (quantity > selectedProduct.getStock()) {
             JOptionPane.showMessageDialog(this,
-                    "Insufficient stock! Available: " + selectedProduct.stock(),
+                    "Insufficient stock! Available: " + selectedProduct.getStock(),
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
             return;
@@ -248,11 +241,11 @@ public class InvoiceCartGUI extends JPanel {
 
         boolean found = false;
         for (CartItem item : cartItems) {
-            if (item.getProduct().id() == selectedProduct.id()) {
+            if (item.getProduct().getId() == selectedProduct.getId()) {
                 int newQuantity = item.getQuantity() + quantity;
-                if (newQuantity > selectedProduct.stock()) {
+                if (newQuantity > selectedProduct.getStock()) {
                     JOptionPane.showMessageDialog(this,
-                            "Cannot add more! Total would exceed available stock: " + selectedProduct.stock(),
+                            "Cannot add more! Total would exceed available stock: " + selectedProduct.getStock(),
                             "Error",
                             JOptionPane.ERROR_MESSAGE);
                     return;
@@ -279,9 +272,9 @@ public class InvoiceCartGUI extends JPanel {
             if (newQuantity <= 0) {
                 cartItems.remove(row);
                 updateCartTable();
-            } else if (newQuantity > item.getProduct().stock()) {
+            } else if (newQuantity > item.getProduct().getStock()) {
                 JOptionPane.showMessageDialog(this,
-                        "Quantity exceeds available stock: " + item.getProduct().stock(),
+                        "Quantity exceeds available stock: " + item.getProduct().getStock(),
                         "Error",
                         JOptionPane.ERROR_MESSAGE);
                 updateCartTable();
@@ -303,9 +296,9 @@ public class InvoiceCartGUI extends JPanel {
 
         for (CartItem item : cartItems) {
             Object[] row = {
-                    item.getProduct().name(),
-                    item.getProduct().sku(),
-                    String.format("$%.2f", item.getProduct().price()),
+                    item.getProduct().getName(),
+                    item.getProduct().getSku(),
+                    String.format("$%.2f", item.getProduct().getPrice()),
                     item.getQuantity(),
                     String.format("$%.2f", item.getTotalPrice())
             };
@@ -353,7 +346,7 @@ public class InvoiceCartGUI extends JPanel {
         StringBuilder message = new StringBuilder("Invoice Summary:\n\n");
         for (CartItem item : cartItems) {
             message.append(String.format("%s x%d - $%.2f\n",
-                    item.getProduct().name(),
+                    item.getProduct().getName(),
                     item.getQuantity(),
                     item.getTotalPrice()));
         }
@@ -369,30 +362,29 @@ public class InvoiceCartGUI extends JPanel {
             try {
                 double total = cartItems.stream().mapToDouble(CartItem::getTotalPrice).sum();
 
-                InvoicesModel invoice = new InvoicesModel(
+                InvoiceModel invoice = new InvoiceModel(
                         0,
                         invoiceNoField.getText(),
                         LocalDate.now(),
-                        total
-                );
-                int invoiceId = invoicesDAO.createInvoice(invoice);
+                        total,
+                        null);
+                int invoiceId = invoiceService.createInvoice(invoice);
 
                 for (CartItem item : cartItems) {
-                    double lineTotal = item.getProduct().price() * item.getQuantity();
-                    InvoiceItemsModel invoiceItem = new InvoiceItemsModel(
+                    double lineTotal = item.getProduct().getPrice() * item.getQuantity();
+                    InvoiceItemModel invoiceItem = new InvoiceItemModel(
                             0,
-                            invoiceId,
-                            item.getProduct().id(),
+                            invoice,
+                            item.getProduct(),
                             item.getQuantity(),
-                            item.getProduct().price(),
-                            lineTotal
-                    );
-                    itemDAO.createInvoiceItem(invoiceItem);
+                            item.getProduct().getPrice(),
+                            lineTotal);
+                    invoiceService.createInvoiceItem(invoiceItem);
 
-                    productDAO.deductStock(item.getProduct().id(), item.getQuantity());
+                    productService.deductStock(item.getProduct().getId(), item.getQuantity());
                 }
 
-                invoicesDAO.updateInvoiceTotal(invoiceId);
+                invoiceService.recalculateInvoiceTotal(invoiceId);
 
                 JOptionPane.showMessageDialog(this,
                         "Invoice created successfully!\nInvoice No: " + invoiceNoField.getText(),
@@ -436,7 +428,7 @@ public class InvoiceCartGUI extends JPanel {
         }
 
         public double getTotalPrice() {
-            return product.price() * quantity;
+            return product.getPrice() * quantity;
         }
     }
 }
